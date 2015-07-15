@@ -30,13 +30,13 @@ var textFontSize, indentX, indentY, strokeWidth, interestWidth; // Initialize sc
 var baseTextFontSize = 11; // The base font size
 var baseLabelTextFontSize = 11;
 var baseTextFontSizeZen = 16; // The base font size when zen mode is on.
-var baseIndentX = 150; // The amount of space (in px) between system ellipses on the X axis. Should be between 120 and 180
-var baseIndentY = 70; // The amount of space (in px) between system ellipses on the Y axis.
+var baseIndentX = 140; // The amount of space (in px) between system rectangles on the X axis. Should be between 120 and 180
+var baseIndentY = 70; // The amount of space (in px) between system rectangles on the Y axis.
 var baseStrokeWidth = 2; // The width in px of the line connecting wormholes
-var baseInterestWidth = 3; // The width in px of the line connecting wormholes when interest is on
+var baseInterestWidth = 4; // The width in px of the line connecting wormholes when interest is on
 var renderWormholeTags = true; // Determines whether wormhole types are shown on the map
 var sliceLastChars = false; // Friendly name: show first X characters if false; show last X characters if true.
-var sliceNumChars = 6; // Slice after this amount of characters.
+var sliceNumChars = 8; // Slice after this amount of characters.
 var showPilotList = true; // Show pilot names under systems
 var highlightActivePilots = false; // Draw a notification ring around systems with active pilots.
 var interestColor = "#FFFFFF";
@@ -114,7 +114,7 @@ $(document).ready(function () {
 
     if (autoRefresh === true) {
         $('#btnRefreshToggle').find('> span').text('ON');
-        refreshTimerID = setInterval(RefreshMap, autoRefreshIntervale);
+        refreshTimerID = setInterval(RefreshMap, autoRefreshInterval);
     } else {
         $('#btnRefreshToggle').find('> span').text('OFF');
     }
@@ -1103,13 +1103,13 @@ function DrawSystem(system) {
     var sysX, sysY, sysText, curSys;
     sysX = GetSystemX(system);
     sysY = GetSystemY(system);
-    curSys = paper.ellipse(sysX, sysY, s(40), s(28));
+    curSys = paper.rect(sysX - s(28), sysY - s(25), s(56), s(50), s(6));
     curSys.msID = system.msID;
     curSys.sysID = system.sysID;
 
     // Draw the system background image if important or dangerous is set.
     if (system.backgroundImageURL) {
-        paper.image(system.backgroundImageURL, curSys.attr("cx") - s(28), curSys.attr("cy") - s(28), s(55), s(55));
+        paper.image(system.backgroundImageURL, curSys.attr("x") + s(5), curSys.attr("y") + s(2), s(44), s(44));
     }
 
     sysText = paper.text(sysX, sysY, sysName);
@@ -1140,7 +1140,7 @@ function DrawSystem(system) {
     if (system.LevelX > 0 && system.LevelX > 0) {
         // Show a notification ring around systems that have other clients with the mapper open.
         if (system.activePilots > 0 && highlightActivePilots === true) {
-            var notificationRing = paper.ellipse(sysX, sysY, s(45), s(33));
+            var notificationRing = paper.rect(sysX - s(28), sysY - s(25), s(56), s(50), s(4));
             notificationRing.attr({'stroke-dasharray': '--', 'stroke-width': s(1), 'stroke': '#ffffff'});
         }
 
@@ -1151,9 +1151,9 @@ function DrawSystem(system) {
 
         var parentIndex = GetSystemIndex(system.ParentID);
         var parentSys = systemsJSON[parentIndex];
-        var parentSysEllipse = objSystems[parentIndex];
+        var parentSysRectangle = objSystems[parentIndex];
 
-        if (parentSysEllipse) {
+        if (parentSysRectangle) {
             var lineColor = GetConnectionColor(system);
             var whColor = GetWormholeColor(system);
             var dasharray = GetConnectionDash(system);
@@ -1162,7 +1162,7 @@ function DrawSystem(system) {
                 interest = true;
             }
             if (curSys.collapsed === false || renderCollapsedConnections === true) {
-                ConnectSystems(parentSysEllipse, curSys, lineColor, "#fff", interest, dasharray);
+                ConnectSystems(parentSysRectangle, curSys, lineColor, "#fff", interest, dasharray);
                 DrawWormholes(parentSys, system, whColor);
             }
         } else {
@@ -1237,7 +1237,7 @@ function GetWormholeColor(system) {
     }
 }
 
-function ColorSystem(system, ellipseSystem, textSysName, pilotList) {
+function ColorSystem(system, rectangleSystem, textSysName, pilotList) {
     if (!system) {
         alert("system is null or undefined");
         return;
@@ -1358,12 +1358,12 @@ function ColorSystem(system, ellipseSystem, textSysName, pilotList) {
         }
         sysStrokeDashArray = "--"
     }
-    var iconX = ellipseSystem.attr("cx") + s(40);
-    var iconY = ellipseSystem.attr("cy") - s(35);
+    var iconX = rectangleSystem.attr("x") + s(60);
+    var iconY = rectangleSystem.attr("y") + s(2);
     if (system.iconImageURL) {
-        paper.image(system.iconImageURL, iconX, iconY, 25, 25);
+        paper.image(system.iconImageURL, iconX, iconY, s(25), s(25));
     }
-    ellipseSystem.attr({
+    rectangleSystem.attr({
         fill: sysColor,
         stroke: sysStroke,
         "stroke-width": sysStrokeWidth,
@@ -1373,11 +1373,11 @@ function ColorSystem(system, ellipseSystem, textSysName, pilotList) {
     textSysName.attr({fill: textColor, "font-size": labelFontSize, cursor: "pointer"});
     if (pilotList !== null) pilotList.attr({fill: pilotColor, "font-size": textFontSize - s(1), cursor: "pointer"});
 
-    ellipseSystem.sysInfoPnlID = 0;
+    rectangleSystem.sysInfoPnlID = 0;
     textSysName.sysInfoPnlID = 0;
 
-    ellipseSystem.hover(onSysOver, onSysOut);
-    textSysName.ellipseIndex = objSystems.length;
+    rectangleSystem.hover(onSysOver, onSysOut);
+    textSysName.rectangleIndex = objSystems.length;
     textSysName.hover(onSysOver, onSysOut);
 }
 
@@ -1437,7 +1437,6 @@ function DrawWormholes(systemFrom, systemTo, textColor) {
     var changePos = ChangeSysWormholePosition(systemTo, systemFrom);
 
     var textCenterX = (sysX1 + sysX2) / 2;
-    textCenterX = textCenterX + s(10);
     var textCenterY = (sysY1 + sysY2) / 2;
 
     var whFromSysX = textCenterX;
@@ -1448,22 +1447,22 @@ function DrawWormholes(systemFrom, systemTo, textColor) {
 
     if (sysY1 !== sysY2) {
         textCenterX = textCenterX - s(10);
-        whFromSysX = textCenterX + s(23);
-        whToSysX = textCenterX - s(23);
+        whFromSysX = textCenterX + s(20);
+        whToSysX = textCenterX - s(20);
     } else {
         whFromSysY = textCenterY - s(10);
         whToSysY = textCenterY + s(10);
     }
 
-    // draws labels near systemTo ellipse if previous same Level X system's levelY = systemTo.levelY - 1
+    // draws labels near systemTo rectangle if previous same Level X system's levelY = systemTo.levelY - 1
     if (zenMode === false) {
         if (changePos === true) {
 
             textCenterX = sysX2 - s(73);
             textCenterY = sysY2 - s(30);
             if (renderWormholeTags) {
-                whFromSysX = textCenterX + s(23);
-                whToSysX = textCenterX - s(23);
+                whFromSysX = textCenterX + s(20);
+                whToSysX = textCenterX - s(20);
             } else {
                 whFromSysX = textCenterX + s(35);
                 whToSysX = textCenterX - s(10);
