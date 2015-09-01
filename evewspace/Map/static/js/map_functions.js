@@ -1156,15 +1156,14 @@ function DrawSystem(system) {
 
         if (parentSysRectangle) {
             var lineColor = GetConnectionColor(system);
-            var whColor = GetWormholeColor(system);
             var dasharray = GetConnectionDash(system);
             var interest = false;
             if (system.interestpath === true || system.interest === true) {
                 interest = true;
             }
             if (curSys.collapsed === false || renderCollapsedConnections === true) {
-                ConnectSystems(parentSysRectangle, curSys, lineColor, "#fff", interest, dasharray);
-                DrawWormholes(parentSys, system, whColor);
+                ConnectSystems(parentSysEllipse, curSys, lineColor, "#fff", interest, dasharray);
+                DrawWormholes(parentSys, system);
             }
         } else {
             alert("Error processing system " + system.Name);
@@ -1222,23 +1221,7 @@ function GetConnectionColor(system) {
     }
 }
 
-function GetWormholeColor(system) {
-    var goodColor = "#009900";
-    var badColor = "#FF3300";
-    if (!system) {
-        return "#000";
-    }
-    if (system.LevelX < 1) {
-        return "#000";
-    }
-    if (system.WhToParentBubbled === true && system.WhFromParentBubbled === true) {
-        return badColor;
-    } else {
-        return goodColor;
-    }
-}
-
-function ColorSystem(system, rectangleSystem, textSysName, pilotList) {
+function ColorSystem(system, ellipseSystem, textSysName, pilotList) {
     if (!system) {
         alert("system is null or undefined");
         return;
@@ -1476,6 +1459,14 @@ function DrawWormholes(systemFrom, systemTo, textColor) {
         whFromSys = whToSys = null;
         whFromColor = whToColor = clearWhColor;
         whFromDecoration = whToDecoration = "inherit";
+        if (systemTo.WhToParentBubbled === true) {
+            whToColor = bubbledColor;
+            whToDecoration = 'bold';
+        }
+        if (systemTo.WhFromParentBubbled === true) {
+            whFromColor = bubbledColor;
+            whFromDecoration = 'bold';
+        }
 
         if (systemTo.WhFromParent) {
             var whFromText = ">";
