@@ -1162,7 +1162,7 @@ function DrawSystem(system) {
                 interest = true;
             }
             if (curSys.collapsed === false || renderCollapsedConnections === true) {
-                ConnectSystems(parentSysEllipse, curSys, lineColor, "#fff", interest, dasharray);
+                ConnectSystems(parentSysRectangle, curSys, lineColor, "#fff", interest, dasharray);
                 DrawWormholes(parentSys, system);
             }
         } else {
@@ -1221,7 +1221,7 @@ function GetConnectionColor(system) {
     }
 }
 
-function ColorSystem(system, ellipseSystem, textSysName, pilotList) {
+function ColorSystem(system, rectangleSystem, textSysName, pilotList) {
     if (!system) {
         alert("system is null or undefined");
         return;
